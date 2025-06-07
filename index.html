@@ -2,185 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LinkLocker Lite</title>
-  <!-- -------------- STYLESHEET (Begin) -------------- -->
   <style>
-    /* Basic Reset */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Spotify-inspired UI */
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 10px;
+      margin: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #121212;
+      color: #FFFFFF;
     }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 15px;
+
+    header {
+      background-color: #1DB954;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #121212;
     }
-    #input, #save-btn {
+
+    .container {
+      padding: 2rem;
+    }
+
+    input[type="text"] {
       width: 100%;
-      max-width: 400px;
-    }
-    #input {
-      padding: 10px;
+      padding: 0.75rem;
       font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    #save-btn {
-      width: 100%;
-      max-width: 400px;
-      padding: 12px;
-      font-size: 1rem;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #save-btn:hover {
-      background: #0056b3;
-    }
-    #list {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 400px;
-    }
-    .item {
-      background: white;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid #ddd;
-      word-break: break-all;
-    }
-    .item button {
-      background: #dc3545;
-      color: white;
+      margin-bottom: 1rem;
       border: none;
       border-radius: 4px;
-      padding: 4px 8px;
+      background-color: #282828;
+      color: #fff;
+    }
+
+    button {
+      background-color: #1DB954;
+      color: #121212;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: background 0.2s;
+      font-weight: bold;
     }
-    .item button:hover {
-      background: #a71d2a;
-    }
-    footer {
-      margin-top: 30px;
-      font-size: 0.8rem;
-      color: #777;
+
+    .item {
+      background-color: #181818;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border-radius: 4px;
     }
   </style>
-  <!-- -------------- STYLESHEET (End) -------------- -->
 </head>
-<body>
+<body onload="renderItems()">
+  <header>
+    LinkLocker Lite
+  </header>
+  <div class="container">
+    <input id="input" type="text" placeholder="Paste your link or note here" />
+    <button onclick="saveItem()">Save</button>
+    <div id="list"></div>
+  </div>
 
-  <h1>🔗 LinkLocker Lite</h1>
-  <p style="margin-bottom: 20px; text-align: center; max-width: 400px; color: #555;">
-    One-tap saving of any URL or note. No sign-up. Everything lives in your browser.
-  </p>
-
-  <!-- -------------- INPUT + SAVE BUTTON -------------- -->
-  <input
-    type="text"
-    id="input"
-    placeholder="Paste any link or note here..."
-    autocomplete="off"
-  >
-  <button id="save-btn">Save to LinkLocker</button>
-
-  <!-- -------------- LIST OF SAVED ITEMS -------------- -->
-  <div id="list"></div>
-
-  <!-- -------------- SCRIPT (Logic) -------------- -->
   <script>
-    // On page load, display items if any
-    document.addEventListener('DOMContentLoaded', renderItems);
-
-    // Save button logic
-    document.getElementById('save-btn').addEventListener('click', saveItem);
-
-    // Function: Save an item into localStorage
     function saveItem() {
-      const inputEl = document.getElementById('input');
-      const content = inputEl.value.trim();
-      if (!content) return;  // ignore empty input
-
-      // Load existing items or start fresh
-      const items = JSON.parse(localStorage.getItem('linklocker')) || [];
-      // Add new item with timestamp
-      items.push({ content, timestamp: new Date().toISOString() });
-      // Store updated array back to localStorage
-      localStorage.setItem('linklocker', JSON.stringify(items));
-
-      // Clear input and re-render list
-      inputEl.value = '';
+      const content = document.getElementById("input").value;
+      const items = JSON.parse(localStorage.getItem("linklocker")) || [];
+      items.push({ content, timestamp: new Date() });
+      localStorage.setItem("linklocker", JSON.stringify(items));
+      document.getElementById("input").value = "";
       renderItems();
     }
 
-    // Function: Render all items in the list
     function renderItems() {
-      const listEl = document.getElementById('list');
-      const items = JSON.parse(localStorage.getItem('linklocker')) || [];
-      // Sort items by newest first
-      items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      // Build HTML for each item
-      let html = '';
-      items.forEach((item, index) => {
-        html += `
-          <div class="item">
-            <span onclick="openLink('${encodeURIComponent(item.content)}')" style="flex:1;cursor:pointer;">
-              ${decodeURIComponent(item.content)}
-            </span>
-            <button onclick="deleteItem(${index})">Delete</button>
-          </div>`;
+      const items = JSON.parse(localStorage.getItem("linklocker")) || [];
+      let html = "";
+      items.forEach(item => {
+        html += `<div class="item">${item.content}</div>`;
       });
-      listEl.innerHTML = html;
-    }
-
-    // Function: Delete one item by its index
-    function deleteItem(idx) {
-      const items = JSON.parse(localStorage.getItem('linklocker')) || [];
-      if (!items[idx]) return;
-      items.splice(idx, 1);
-      localStorage.setItem('linklocker', JSON.stringify(items));
-      renderItems();
-    }
-
-    // Function: Open a saved link in a new tab, or if it's not a URL, do nothing
-    function openLink(encoded) {
-      const content = decodeURIComponent(encoded);
-      // Simple check: if it starts with http or https, open it. Otherwise, do nothing.
-      if (/^(https?:\/\/)/.test(content)) {
-        window.open(content, '_blank');
-      }
-      // If it’s plain text/note, you could optionally copy to clipboard instead:
-      // navigator.clipboard.writeText(content);
+      document.getElementById("list").innerHTML = html;
     }
   </script>
-  <!-- -------------- SCRIPT END -------------- -->
-
-  <footer>
-    Data saved in your browser—never sent anywhere. <br>
-    <!-- Monetization hints (uncomment when ready) -->
-    <!-- 
-      ‣ Sell “LinkLocker in a Box” (Siter.io + JS) on Gumroad ($15) 
-      ‣ Offer AI Auto-Tagging upgrade ($7 one-time) 
-      ‣ Add affiliate links to Notion/Airtable for related tools 
-    -->
-  </footer>
-
 </body>
 </html>
