@@ -1,88 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LinkLocker Lite</title>
   <style>
-    /* Spotify-inspired UI */
     body {
       margin: 0;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-family: 'Helvetica Neue', sans-serif;
       background-color: #121212;
-      color: #FFFFFF;
-    }
-
-    header {
-      background-color: #1DB954;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
     }
 
     .container {
-      padding: 2rem;
-    }
-
-    input[type="text"] {
+      max-width: 400px;
       width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      border: none;
-      border-radius: 4px;
-      background-color: #282828;
-      color: #fff;
+      text-align: center;
     }
 
-    button {
-      background-color: #1DB954;
-      color: #121212;
+    #profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #1DB954;
+    }
+
+    #photo-label {
+      font-size: 14px;
+      color: #bbb;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"],
+    input[type="url"],
+    input[type="text"] {
+      display: none;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 30px;
+      color: #aaa;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    #link-form input {
+      width: 80%;
+      padding: 10px;
+      margin-bottom: 10px;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #link-form button {
+      padding: 10px 20px;
+      background-color: #1DB954;
+      color: white;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
     }
 
-    .item {
-      background-color: #181818;
-      padding: 1rem;
-      margin: 0.5rem 0;
-      border-radius: 4px;
+    .link-item {
+      background-color: #222;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .link-item a {
+      color: #1DB954;
+      text-decoration: none;
+    }
+
+    .delete-btn {
+      color: #f55;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #888;
     }
   </style>
 </head>
-<body onload="renderItems()">
-  <header>
-    LinkLocker Lite
-  </header>
+<body>
   <div class="container">
-    <input id="input" type="text" placeholder="Paste your link or note here" />
-    <button onclick="saveItem()">Save</button>
-    <div id="list"></div>
+    <input type="file" id="file-input" accept="image/*">
+    <img id="profile-pic" src="https://placehold.co/100x100" alt="Profile Photo" />
+    <div id="photo-label">Click to upload photo</div>
+
+    <h1>LinkLocker Lite</h1>
+    <p>One place for all your personal links.</p>
+
+    <form id="link-form">
+      <input type="text" id="link-title" placeholder="Link title (optional)">
+      <input type="url" id="link-url" placeholder="https://example.com" required>
+      <button type="submit">Save Link</button>
+    </form>
+
+    <div id="link-list"></div>
   </div>
 
-  <script>
-    function saveItem() {
-      const content = document.getElementById("input").value;
-      const items = JSON.parse(localStorage.getItem("linklocker")) || [];
-      items.push({ content, timestamp: new Date() });
-      localStorage.setItem("linklocker", JSON.stringify(items));
-      document.getElementById("input").value = "";
-      renderItems();
-    }
+  <footer>Made with 🎧 by You</footer>
 
-    function renderItems() {
-      const items = JSON.parse(localStorage.getItem("linklocker")) || [];
-      let html = "";
-      items.forEach(item => {
-        html += `<div class="item">${item.content}</div>`;
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const profilePic = document.getElementById('profile-pic');
+    const form = document.getElementById('link-form');
+    const linkList = document.getElementById('link-list');
+
+    profilePic.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        profilePic.src = URL.createObjectURL(file);
+      }
+    });
+
+    const getLinks = () => JSON.parse(localStorage.getItem('links') || '[]');
+
+    const saveLinks = (links) => localStorage.setItem('links', JSON.stringify(links));
+
+    const renderLinks = () => {
+      const links = getLinks();
+      linkList.innerHTML = '';
+      links.forEach((link, i) => {
+        const div = document.createElement('div');
+        div.className = 'link-item';
+        div.innerHTML = `
+          <div>
+            <a href="${link.url}" target="_blank">${link.title || link.url}</a><br/>
+            <small style="color:#aaa;">${new Date(link.timestamp).toLocaleString()}</small>
+          </div>
+          <div class="delete-btn" onclick="deleteLink(${i})">✕</div>
+        `;
+        linkList.appendChild(div);
       });
-      document.getElementById("list").innerHTML = html;
-    }
+    };
+
+    const deleteLink = (index) => {
+      const links = getLinks();
+      links.splice(index, 1);
+      saveLinks(links);
+      renderLinks();
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const url = document.getElementById('link-url').value.trim();
+      const title = document.getElementById('link-title').value.trim();
+      if (!url) return;
+
+      const links = getLinks();
+      links.unshift({ url, title, timestamp: Date.now() });
+      saveLinks(links);
+      renderLinks();
+      form.reset();
+    });
+
+    window.deleteLink = deleteLink;
+    renderLinks();
   </script>
 </body>
 </html>
