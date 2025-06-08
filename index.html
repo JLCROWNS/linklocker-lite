@@ -7,73 +7,76 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Helvetica Neue', sans-serif;
+      font-family: 'Circular', 'Helvetica Neue', sans-serif;
       background-color: #121212;
       color: #fff;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
+      height: 100vh;
+      overflow: hidden;
     }
-    .container {
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
+    .sidebar {
+      width: 220px;
+      background-color: #000;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100%;
     }
-    #profile-pic {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
+    .main {
+      flex-grow: 1;
+      padding: 30px;
+      background: #121212;
+      overflow-y: auto;
+    }
+    .app {
+      display: flex;
+      height: 100%;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1DB954;
+    }
+    .nav a {
+      color: #b3b3b3;
+      text-decoration: none;
       margin-bottom: 10px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 2px solid #1DB954;
-    }
-    #photo-label {
+      display: block;
       font-size: 14px;
-      color: #bbb;
-      margin-bottom: 20px;
     }
-    input[type="file"],
-    input[type="url"],
-    input[type="text"] {
-      display: none;
+    .nav a:hover {
+      color: #fff;
     }
     h1 {
-      font-size: 24px;
-      margin-bottom: 5px;
-    }
-    p {
-      font-size: 14px;
-      margin-bottom: 30px;
-      color: #aaa;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    #link-form input,
-    #link-form select {
-      width: 80%;
-      padding: 10px;
+      font-size: 32px;
       margin-bottom: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
     }
-    #link-form button {
-      padding: 10px 20px;
-      background-color: #1DB954;
-      color: white;
+    .form-group {
+      margin-bottom: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 4px;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #1DB954;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
       font-weight: bold;
+      cursor: pointer;
     }
     .link-item {
-      background-color: #222;
-      margin: 8px 0;
-      padding: 12px;
-      border-radius: 6px;
+      background: #242424;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -85,115 +88,104 @@
     .delete-btn {
       color: #f55;
       cursor: pointer;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-    .tag-select {
-      width: 84%;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 14px;
     }
     footer {
-      margin-top: 40px;
+      text-align: center;
       font-size: 12px;
-      color: #888;
+      padding: 10px;
+      background: #000;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <input type="file" id="file-input" accept="image/*">
-    <img id="profile-pic" src="https://placehold.co/100x100" alt="Profile Photo" />
-    <div id="photo-label">Click to upload photo</div>
-
-    <h1>LinkLocker Plus</h1>
-    <p>Organize and store your important links</p>
-
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">LinkLocker</div>
+    <div class="nav">
+      <a href="#">Home</a>
+      <a href="#">My Links</a>
+      <a href="#">Settings</a>
+    </div>
+  </div>
+  <div class="main">
+    <h1>Your Links</h1>
     <form id="link-form">
-      <input type="text" id="link-title" placeholder="Link title (optional)">
-      <input type="url" id="link-url" placeholder="https://example.com" required>
-      <input type="text" id="link-tag" placeholder="Tag or Folder (optional)">
+      <div class="form-group">
+        <input type="text" id="link-title" placeholder="Link title (optional)">
+        <input type="url" id="link-url" placeholder="https://example.com" required>
+        <input type="text" id="link-tag" placeholder="Tag or Folder (optional)">
+      </div>
       <button type="submit">Save Link</button>
     </form>
 
-    <select id="filter-tag" class="tag-select">
+    <select id="filter-tag">
       <option value="">-- Filter by Tag --</option>
     </select>
 
     <div id="link-list"></div>
   </div>
-  <footer>Made with 🎧 by You</footer>
+</div>
+<footer>Made with ♫ by You</footer>
 
-  <script>
-    const fileInput = document.getElementById('file-input');
-    const profilePic = document.getElementById('profile-pic');
-    const form = document.getElementById('link-form');
-    const linkList = document.getElementById('link-list');
-    const filterTag = document.getElementById('filter-tag');
+<script>
+  const form = document.getElementById('link-form');
+  const linkList = document.getElementById('link-list');
+  const filterTag = document.getElementById('filter-tag');
 
-    profilePic.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (file) {
-        profilePic.src = URL.createObjectURL(file);
-      }
+  const getLinks = () => JSON.parse(localStorage.getItem('links') || '[]');
+  const saveLinks = (links) => localStorage.setItem('links', JSON.stringify(links));
+
+  const renderTags = (links) => {
+    const tags = [...new Set(links.map(link => link.tag).filter(tag => tag))];
+    filterTag.innerHTML = '<option value="">-- Filter by Tag --</option>' +
+      tags.map(tag => `<option value="${tag}">${tag}</option>`).join('');
+  };
+
+  const renderLinks = () => {
+    const links = getLinks();
+    const selectedTag = filterTag.value;
+    linkList.innerHTML = '';
+    const filtered = selectedTag ? links.filter(link => link.tag === selectedTag) : links;
+    filtered.forEach((link, i) => {
+      const div = document.createElement('div');
+      div.className = 'link-item';
+      div.innerHTML = `
+        <div>
+          <a href="${link.url}" target="_blank">${link.title || link.url}</a><br/>
+          <small style="color:#bbb;">${new Date(link.timestamp).toLocaleString()}${link.tag ? ' | ' + link.tag : ''}</small>
+        </div>
+        <div class="delete-btn" onclick="deleteLink(${i})">✕</div>
+      `;
+      linkList.appendChild(div);
     });
+    renderTags(links);
+  };
 
-    const getLinks = () => JSON.parse(localStorage.getItem('links') || '[]');
-    const saveLinks = (links) => localStorage.setItem('links', JSON.stringify(links));
-
-    const renderTags = (links) => {
-      const tags = [...new Set(links.map(link => link.tag).filter(tag => tag))];
-      filterTag.innerHTML = '<option value="">-- Filter by Tag --</option>' +
-        tags.map(tag => `<option value="${tag}">${tag}</option>`).join('');
-    };
-
-    const renderLinks = () => {
-      const links = getLinks();
-      const selectedTag = filterTag.value;
-      linkList.innerHTML = '';
-      const filtered = selectedTag ? links.filter(link => link.tag === selectedTag) : links;
-      filtered.forEach((link, i) => {
-        const div = document.createElement('div');
-        div.className = 'link-item';
-        div.innerHTML = `
-          <div>
-            <a href="${link.url}" target="_blank">${link.title || link.url}</a><br/>
-            <small style="color:#aaa;">${new Date(link.timestamp).toLocaleString()}${link.tag ? ' | ' + link.tag : ''}</small>
-          </div>
-          <div class="delete-btn" onclick="deleteLink(${i})">✕</div>
-        `;
-        linkList.appendChild(div);
-      });
-      renderTags(links);
-    };
-
-    const deleteLink = (index) => {
-      const links = getLinks();
-      links.splice(index, 1);
-      saveLinks(links);
-      renderLinks();
-    };
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const url = document.getElementById('link-url').value.trim();
-      const title = document.getElementById('link-title').value.trim();
-      const tag = document.getElementById('link-tag').value.trim();
-      if (!url) return;
-      const links = getLinks();
-      links.unshift({ url, title, tag, timestamp: Date.now() });
-      saveLinks(links);
-      renderLinks();
-      form.reset();
-    });
-
-    filterTag.addEventListener('change', renderLinks);
-
-    window.deleteLink = deleteLink;
+  const deleteLink = (index) => {
+    const links = getLinks();
+    links.splice(index, 1);
+    saveLinks(links);
     renderLinks();
-  </script>
+  };
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = document.getElementById('link-url').value.trim();
+    const title = document.getElementById('link-title').value.trim();
+    const tag = document.getElementById('link-tag').value.trim();
+    if (!url) return;
+    const links = getLinks();
+    links.unshift({ url, title, tag, timestamp: Date.now() });
+    saveLinks(links);
+    renderLinks();
+    form.reset();
+  });
+
+  filterTag.addEventListener('change', renderLinks);
+  window.deleteLink = deleteLink;
+
+  renderLinks();
+</script>
 </body>
 </html>
